@@ -3,20 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solucionador Matemático con IA</title>
+    <title>Solucionador de Matemáticas y Código con IA</title>
     
-    <!-- Librería MathJax -->
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script src="[https://polyfill.io/v3/polyfill.min.js?features=es6](https://polyfill.io/v3/polyfill.min.js?features=es6)"></script>
     <script>
       MathJax = {
-        tex: {
-          inlineMath: [['$', '$'], ['\\(', '\\)']],
-          displayMath: [['$$', '$$'], ['\\[', '\\]']]
-        },
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
         startup: { typeset: false }
       };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
 
     <style>
         :root {
@@ -67,48 +63,47 @@
         .upload-section {
             background-color: var(--card-bg); padding: 30px; border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;
-            text-align: center; border: 1px solid var(--border-color);
+            border: 1px solid var(--border-color);
         }
 
-        /* Estilo para el selector de modo */
         .mode-selector {
-            margin-bottom: 25px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
+            margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;
         }
 
-        .mode-selector select {
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 2px solid var(--border-color);
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 80%;
-            outline: none;
+        .mode-selector select, textarea {
+            padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color);
+            background-color: var(--bg-color); color: var(--text-main); font-size: 1rem; width: 100%; outline: none; box-sizing: border-box;
         }
 
-        .mode-selector select:focus {
-            border-color: var(--accent-color);
+        .mode-selector select:focus, textarea:focus { border-color: var(--accent-color); }
+
+        /* Pestañas de entrada */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            flex: 1; padding: 10px; background: var(--bg-color); border: 2px solid var(--border-color);
+            border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-main);
+        }
+        .tab-btn.active { border-color: var(--accent-color); background-color: rgba(139, 92, 246, 0.1); }
+
+        .input-panel { display: none; text-align: center; }
+        .input-panel.active { display: block; }
+
+        textarea {
+            resize: vertical; min-height: 120px; font-family: monospace;
         }
 
-        .file-upload-wrapper { position: relative; margin-bottom: 20px; }
+        .file-upload-wrapper { position: relative; margin-bottom: 10px; }
         .file-upload-input { width: 0.1px; height: 0.1px; opacity: 0; position: absolute; z-index: -1; }
         
         .file-upload-label {
-            display: inline-block; padding: 20px 40px; background-color: transparent;
+            display: inline-block; padding: 20px; background-color: transparent;
             color: var(--primary-color); border: 2px dashed var(--accent-color);
-            border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 80%;
+            border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; box-sizing: border-box;
         }
         .file-upload-label:hover { background-color: rgba(139, 92, 246, 0.1); }
 
         #image-preview {
-            max-width: 100%; max-height: 300px; margin-top: 20px;
-            border-radius: 8px; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px; display: none;
         }
 
         #solve-btn {
@@ -122,52 +117,61 @@
 
         #solution-container {
             display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid var(--success-color);
-            border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
         }
-        #math-output { overflow-x: auto; font-size: 1.1rem;}
+        #math-output { overflow-x: auto; font-size: 1rem; }
+        #math-output pre { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
 
     <div class="header-container">
-        <h1>Solucionador Matemático con IA</h1>
+        <h1>Solucionador IA: Matemáticas y Código</h1>
         <button id="theme-toggle">🌙 Modo Oscuro</button>
     </div>
 
     <div class="upload-section">
         
-        <!-- Nuevo Menú de Opciones -->
         <div class="mode-selector">
-            <label for="modo-resolucion" style="font-weight: bold; color: var(--primary-color);">¿Cómo quieres la respuesta?</label>
+            <label style="font-weight: bold; color: var(--primary-color);">Modo de respuesta:</label>
             <select id="modo-resolucion">
                 <option value="detallado">📚 Explicación detallada paso a paso</option>
-                <option value="procedimiento_directo">⚙️ Solo procedimiento matemático y respuesta (Sin texto)</option>
+                <option value="procedimiento_directo">⚙️ Solo procedimiento / Código directo</option>
                 <option value="solo_respuesta">🎯 Solo la respuesta final</option>
             </select>
         </div>
 
-        <p>Sube una foto o captura de pantalla de tu ejercicio matemático.</p>
-        
-        <div class="file-upload-wrapper">
-            <input type="file" id="imageInput" class="file-upload-input" accept="image/*" onchange="previewImage(event)">
-            <label for="imageInput" class="file-upload-label">📸 Haz clic para subir una imagen</label>
+        <!-- Pestañas para elegir entrada -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('image')">📸 Subir Imagen</button>
+            <button class="tab-btn" onclick="switchTab('text')">⌨️ Escribir Código / Texto</button>
         </div>
 
-        <img id="image-preview" alt="Previsualización del problema">
+        <!-- Panel de Imagen -->
+        <div id="panel-image" class="input-panel active">
+            <div class="file-upload-wrapper">
+                <input type="file" id="imageInput" class="file-upload-input" accept="image/*" onchange="previewImage(event)">
+                <label for="imageInput" class="file-upload-label">Haz clic para subir imagen (Matemáticas o Código)</label>
+            </div>
+            <img id="image-preview" alt="Previsualización">
+        </div>
 
-        <button id="solve-btn" onclick="resolverImagen()" disabled>Analizar y Resolver Imagen</button>
+        <!-- Panel de Texto -->
+        <div id="panel-text" class="input-panel">
+            <textarea id="codeInput" placeholder="Pega tu fragmento de código (Java, CSS, Python...) o describe tu problema matemático aquí..."></textarea>
+        </div>
+
+        <button id="solve-btn" onclick="enviarConsulta()">Analizar y Resolver</button>
     </div>
 
-    <div id="loading">La IA está analizando la imagen y calculando la solución... ⚙️</div>
+    <div id="loading">La IA está procesando tu solicitud... ⚙️</div>
 
     <div id="solution-container">
-        <h2 style="color: var(--primary-color); margin-top: 0;">Solución Generada</h2>
+        <h2 style="color: var(--primary-color); margin-top: 0;">Resultado Generado</h2>
         <div id="math-output"></div>
     </div>
 
     <script>
-        // Lógica de Tema Oscuro
         const themeToggleBtn = document.getElementById('theme-toggle');
         const rootElement = document.documentElement;
         if (localStorage.getItem('theme') === 'dark') {
@@ -187,36 +191,60 @@
             }
         });
 
-        // Previsualizar Imagen
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
+            
+            if (tab === 'image') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('panel-image').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('panel-text').classList.add('active');
+            }
+        }
+
         function previewImage(event) {
             const input = event.target;
             const preview = document.getElementById('image-preview');
-            const solveBtn = document.getElementById('solve-btn');
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     preview.src = e.target.result;
                     preview.style.display = 'inline-block';
-                    solveBtn.disabled = false;
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // Enviar al servidor
-        async function resolverImagen() {
-            const input = document.getElementById('imageInput');
-            const modo = document.getElementById('modo-resolucion').value; // Capturamos la opción elegida
+        async function enviarConsulta() {
+            const modo = document.getElementById('modo-resolucion').value;
+            const imageInput = document.getElementById('imageInput');
+            const codeInput = document.getElementById('codeInput').value.trim();
             
-            if (!input.files[0]) return;
+            const isImageTab = document.getElementById('panel-image').classList.contains('active');
+
+            if (isImageTab && (!imageInput.files || !imageInput.files[0])) {
+                alert("Por favor selecciona una imagen primero.");
+                return;
+            }
+            if (!isImageTab && !codeInput) {
+                alert("Por favor escribe o pega algún código o problema.");
+                return;
+            }
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('solution-container').style.display = 'none';
             document.getElementById('solve-btn').disabled = true;
 
             const formData = new FormData();
-            formData.append('imagen', input.files[0]);
-            formData.append('modo', modo); // Agregamos la opción al envío
+            formData.append('modo', modo);
+            
+            if (isImageTab && imageInput.files[0]) {
+                formData.append('imagen', imageInput.files[0]);
+            } else {
+                formData.append('codigo_texto', codeInput);
+            }
 
             try {
                 const response = await fetch('/resolver', {
@@ -236,7 +264,7 @@
                     MathJax.typesetPromise([outputDiv]).catch(err => console.error(err.message));
                 }
             } catch (error) {
-                alert("Error de conexión. ¿El servidor Python está corriendo?");
+                alert("Error de conexión con el servidor.");
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('solve-btn').disabled = false;
