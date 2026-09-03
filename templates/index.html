@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solucionador IA: Matemáticas y Código</title>
+    <title>Solucionador IA: Matemáticas y Código Interactivo</title>
     
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script src="[https://polyfill.io/v3/polyfill.min.js?features=es6](https://polyfill.io/v3/polyfill.min.js?features=es6)"></script>
     <script>
       MathJax = {
         tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
         startup: { typeset: false }
       };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
 
     <style>
         :root {
@@ -67,15 +67,14 @@
         }
 
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        
         .control-group { display: flex; flex-direction: column; gap: 8px; }
         .control-group label { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; }
 
-        select, textarea {
+        select, textarea, input[type="text"] {
             padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color);
             background-color: var(--bg-color); color: var(--text-main); font-size: 1rem; width: 100%; outline: none; box-sizing: border-box;
         }
-        select:focus, textarea:focus { border-color: var(--accent-color); }
+        select:focus, textarea:focus, input[type="text"]:focus { border-color: var(--accent-color); }
 
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab-btn {
@@ -101,33 +100,46 @@
 
         #image-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px; display: none; }
 
-        #solve-btn {
+        .btn-primary {
             background-color: var(--accent-color); color: white; border: none;
             padding: 12px 24px; border-radius: 8px; font-size: 1.1rem; font-weight: bold;
             cursor: pointer; width: 100%; margin-top: 20px;
         }
-        #solve-btn:disabled { background-color: var(--border-color); cursor: not-allowed; color: #64748b; }
+        .btn-primary:disabled { background-color: var(--border-color); cursor: not-allowed; color: #64748b; }
 
         #loading { text-align: center; display: none; font-weight: bold; color: var(--accent-color); margin: 20px 0; font-size: 1.2rem; }
 
         #solution-container {
             display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
+            margin-bottom: 30px;
         }
         #math-output { overflow-x: auto; font-size: 1rem; }
         #math-output pre { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+
+        /* Estilos para la sección de seguimiento interactivo */
+        .chat-followup {
+            margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;
+        }
+        .chat-history {
+            display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;
+        }
+        .chat-bubble {
+            padding: 15px; border-radius: 8px; background-color: var(--bg-color); border: 1px solid var(--border-color);
+        }
+        .chat-input-wrapper {
+            display: flex; gap: 10px;
+        }
     </style>
 </head>
 <body>
 
     <div class="header-container">
-        <h1>Solucionador IA: Matemáticas y Código</h1>
+        <h1>Solucionador IA: Interactivo</h1>
         <button id="theme-toggle">🌙 Modo Oscuro</button>
     </div>
 
     <div class="upload-section">
-        
-        <!-- Controles separados: Categoría y Nivel de detalle -->
         <div class="controls-grid">
             <div class="control-group">
                 <label for="categoria">Categoría:</label>
@@ -163,14 +175,25 @@
             <textarea id="codeInput" placeholder="Escribe tu código o problema aquí..."></textarea>
         </div>
 
-        <button id="solve-btn" onclick="enviarConsulta()">Analizar y Resolver</button>
+        <button id="solve-btn" class="btn-primary" onclick="enviarConsulta()">Analizar y Resolver</button>
     </div>
 
     <div id="loading">La IA está procesando tu solicitud... ⚙️</div>
 
+    <!-- Contenedor del Resultado e Interacción -->
     <div id="solution-container">
         <h2 style="color: var(--primary-color); margin-top: 0;">Resultado Generado</h2>
         <div id="math-output"></div>
+
+        <!-- Caja de chat para interactuar y añadir cambios -->
+        <div class="chat-followup">
+            <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 10px;">💬 ¿Necesitas añadir algo o hacer una pregunta sobre este resultado?</h3>
+            <div id="chat-conversation" class="chat-history"></div>
+            <div class="chat-input-wrapper">
+                <input type="text" id="chatInput" placeholder="Ej: Explícame el paso 2 de otra forma, o cambia esta variable a 'y'...">
+                <button class="btn-primary" style="margin-top: 0; width: 150px;" onclick="enviarPreguntaChat()">Enviar</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -239,6 +262,7 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('solution-container').style.display = 'none';
             document.getElementById('solve-btn').disabled = true;
+            document.getElementById('chat-conversation').innerHTML = ''; // Limpiar chat previo
 
             const formData = new FormData();
             formData.append('categoria', categoria);
@@ -272,6 +296,58 @@
             } finally {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('solve-btn').disabled = false;
+            }
+        }
+
+        async function enviarPreguntaChat() {
+            const chatInput = document.getElementById('chatInput');
+            const mensaje = chatInput.value.trim();
+            if (!mensaje) return;
+
+            const chatContainer = document.getElementById('chat-conversation');
+            
+            // Mostrar pregunta del usuario
+            const userBubble = document.createElement('div');
+            userBubble.className = 'chat-bubble';
+            userBubble.innerHTML = `<strong>Tú:</strong> ${mensaje}`;
+            chatContainer.appendChild(userBubble);
+            
+            chatInput.value = '';
+
+            // Mostrar estado de carga temporal
+            const loadingBubble = document.createElement('div');
+            loadingBubble.className = 'chat-bubble';
+            loadingBubble.id = 'temp-loading';
+            loadingBubble.innerHTML = `<em>La IA está respondiendo...</em>`;
+            chatContainer.appendChild(loadingBubble);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mensaje: mensaje })
+                });
+                const data = await response.json();
+
+                document.getElementById('temp-loading').remove();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    const aiBubble = document.createElement('div');
+                    aiBubble.className = 'chat-bubble';
+                    aiBubble.innerHTML = `<strong>IA:</strong><br>${data.respuesta_html}`;
+                    chatContainer.appendChild(aiBubble);
+
+                    // Renderizar MathJax para las nuevas respuestas del chat
+                    MathJax.typesetClear([aiBubble]);
+                    MathJax.typesetPromise([aiBubble]).catch(err => console.error(err.message));
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                }
+            } catch (error) {
+                document.getElementById('temp-loading').remove();
+                alert("Error de conexión en el chat.");
             }
         }
     </script>
