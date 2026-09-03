@@ -3,22 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solucionador IA: Matemáticas y Código Interactivo</title>
+    <title>Solucionador IA: Matemáticas y Código</title>
     
-    <!-- Nueva configuración más robusta para MathJax -->
     <script>
       window.MathJax = {
-        tex: { 
-            inlineMath: [['$', '$'], ['\\(', '\\)']], 
-            displayMath: [['$$', '$$'], ['\\[', '\\]']],
-            processEscapes: true
-        },
-        startup: {
-            typeset: false // Evita que se ejecute antes de tiempo
-        }
+        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']], processEscapes: true },
+        startup: { typeset: false }
       };
     </script>
-    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
 
     <style>
         :root {
@@ -43,85 +36,41 @@
 
         * { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            line-height: 1.6;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-main); max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; }
 
-        .header-container {
-            display: flex; flex-direction: column; align-items: center;
-            margin-bottom: 30px; border-bottom: 3px solid var(--accent-color); padding-bottom: 20px;
-        }
-
+        .header-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; border-bottom: 3px solid var(--accent-color); padding-bottom: 20px; }
         h1 { color: var(--primary-color); text-align: center; margin: 0 0 15px 0;}
+        
+        .header-buttons { display: flex; gap: 10px; }
+        .btn-outline { background-color: var(--card-bg); color: var(--primary-color); border: 2px solid var(--accent-color); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; }
 
-        #theme-toggle {
-            background-color: var(--card-bg); color: var(--primary-color);
-            border: 2px solid var(--accent-color); padding: 8px 16px;
-            border-radius: 20px; cursor: pointer; font-weight: 600;
-        }
-
-        .upload-section {
-            background-color: var(--card-bg); padding: 30px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;
-            border: 1px solid var(--border-color);
-        }
-
+        .upload-section { background-color: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid var(--border-color); }
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
         .control-group { display: flex; flex-direction: column; gap: 8px; }
         .control-group label { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; }
 
-        select, textarea, input[type="text"] {
-            padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color);
-            background-color: var(--bg-color); color: var(--text-main); font-size: 1rem; width: 100%; outline: none; box-sizing: border-box;
-        }
+        select, textarea, input[type="text"] { padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color); background-color: var(--bg-color); color: var(--text-main); font-size: 1rem; width: 100%; outline: none; box-sizing: border-box; }
         select:focus, textarea:focus, input[type="text"]:focus { border-color: var(--accent-color); }
 
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn {
-            flex: 1; padding: 10px; background: var(--bg-color); border: 2px solid var(--border-color);
-            border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-main);
-        }
+        .tab-btn { flex: 1; padding: 10px; background: var(--bg-color); border: 2px solid var(--border-color); border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text-main); }
         .tab-btn.active { border-color: var(--accent-color); background-color: rgba(139, 92, 246, 0.1); }
-
         .input-panel { display: none; text-align: center; }
         .input-panel.active { display: block; }
-
         textarea { resize: vertical; min-height: 120px; font-family: monospace; text-align: left; }
 
         .file-upload-wrapper { position: relative; margin-bottom: 10px; }
         .file-upload-input { width: 0.1px; height: 0.1px; opacity: 0; position: absolute; z-index: -1; }
-        
-        .file-upload-label {
-            display: inline-block; padding: 20px; background-color: transparent;
-            color: var(--primary-color); border: 2px dashed var(--accent-color);
-            border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; box-sizing: border-box;
-        }
+        .file-upload-label { display: inline-block; padding: 20px; background-color: transparent; color: var(--primary-color); border: 2px dashed var(--accent-color); border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; box-sizing: border-box; }
         .file-upload-label:hover { background-color: rgba(139, 92, 246, 0.1); }
-
         #image-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px; display: none; }
 
-        .btn-primary {
-            background-color: var(--accent-color); color: white; border: none;
-            padding: 12px 24px; border-radius: 8px; font-size: 1.1rem; font-weight: bold;
-            cursor: pointer; width: 100%; margin-top: 20px;
-        }
+        .btn-primary { background-color: var(--accent-color); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
         .btn-primary:disabled { background-color: var(--border-color); cursor: not-allowed; color: #64748b; }
 
         #loading { text-align: center; display: none; font-weight: bold; color: var(--accent-color); margin: 20px 0; font-size: 1.2rem; }
 
-        #solution-container {
-            display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
-            margin-bottom: 30px;
-        }
-        
-        /* Ajuste de fuentes para que las matemáticas se vean mejor */
+        #solution-container { display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-left: 5px solid var(--success-color); margin-bottom: 30px; }
         #math-output, .chat-bubble { overflow-x: auto; font-size: 1.05rem; }
         #math-output pre, .chat-bubble pre { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
 
@@ -129,13 +78,25 @@
         .chat-history { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
         .chat-bubble { padding: 15px; border-radius: 8px; background-color: var(--bg-color); border: 1px solid var(--border-color); }
         .chat-input-wrapper { display: flex; gap: 10px; }
+
+        /* Estilos del Modal de Historial */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-bg); width: 90%; max-width: 500px; max-height: 80vh; border-radius: 12px; padding: 25px; overflow-y: auto; position: relative; border: 1px solid var(--border-color); }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; cursor: pointer; color: var(--text-main); font-weight: bold; line-height: 1; }
+        .historial-item { padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: background 0.2s; background: var(--bg-color); }
+        .historial-item:hover { border-color: var(--accent-color); }
+        .historial-item h4 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 1.05rem; }
+        .historial-item p { margin: 0; font-size: 0.85rem; color: #64748b; }
     </style>
 </head>
 <body>
 
     <div class="header-container">
         <h1>Solucionador IA: Interactivo</h1>
-        <button id="theme-toggle">🌙 Modo Oscuro</button>
+        <div class="header-buttons">
+            <button class="btn-outline" onclick="abrirModalHistorial()">🕒 Historial</button>
+            <button id="theme-toggle" class="btn-outline">🌙 Modo Oscuro</button>
+        </div>
     </div>
 
     <div class="upload-section">
@@ -193,7 +154,21 @@
         </div>
     </div>
 
+    <!-- Modal del Historial -->
+    <div id="modal-historial" class="modal-overlay">
+        <div class="modal-content">
+            <span class="close-btn" onclick="cerrarModalHistorial()">&times;</span>
+            <h2 style="color: var(--primary-color); margin-top: 0; margin-bottom: 20px;">Tu Historial</h2>
+            <div id="lista-historial"></div>
+            <button class="btn-primary" style="background-color: #ef4444; margin-top: 20px;" onclick="borrarHistorial()">🗑️ Borrar todo el historial</button>
+        </div>
+    </div>
+
     <script>
+        // Variables globales para rastrear la sesión actual
+        let currentSessionId = null;
+        let currentContextoBackend = "";
+
         const themeToggleBtn = document.getElementById('theme-toggle');
         const rootElement = document.documentElement;
         if (localStorage.getItem('theme') === 'dark') {
@@ -216,7 +191,6 @@
         function switchTab(tab) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.input-panel').forEach(p => p.classList.remove('active'));
-            
             if (tab === 'image') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('panel-image').classList.add('active');
@@ -231,39 +205,113 @@
             const preview = document.getElementById('image-preview');
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'inline-block';
-                }
+                reader.onload = function(e) { preview.src = e.target.result; preview.style.display = 'inline-block'; }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
-        // NUEVA FUNCIÓN: Obliga a MathJax a procesar el texto inyectado
         function procesarMatematicas(elemento) {
             if (window.MathJax) {
-                MathJax.typesetPromise([elemento]).catch(function (err) {
-                    console.error('Error procesando matemáticas:', err.message);
-                });
+                MathJax.typesetPromise([elemento]).catch(err => console.error(err));
             }
         }
+
+        // --- SISTEMA DE HISTORIAL (LocalStorage) ---
+        function guardarEnHistorial() {
+            let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
+            let index = historial.findIndex(h => h.id === currentSessionId);
+            
+            const isImage = document.getElementById('panel-image').classList.contains('active');
+            const categoria = document.getElementById('categoria').value;
+            const icono = categoria === 'matematicas' ? '📐' : '💻';
+            
+            let tituloRaw = isImage ? "Resolución de Imagen" : document.getElementById('codeInput').value;
+            let titulo = `${icono} ` + (tituloRaw.length > 35 ? tituloRaw.substring(0, 35) + "..." : tituloRaw);
+
+            const registro = {
+                id: currentSessionId,
+                fecha: new Date().toLocaleString(),
+                titulo: titulo,
+                mathOutput: document.getElementById('math-output').innerHTML,
+                chatOutput: document.getElementById('chat-conversation').innerHTML,
+                contextoBackend: currentContextoBackend
+            };
+
+            if (index !== -1) {
+                historial[index] = registro; // Actualiza el chat de esta sesión
+            } else {
+                historial.unshift(registro); // Nuevo problema arriba
+            }
+
+            if (historial.length > 15) historial.pop(); // Guarda máximo los últimos 15
+            localStorage.setItem('math_historial', JSON.stringify(historial));
+        }
+
+        function abrirModalHistorial() {
+            const modal = document.getElementById('modal-historial');
+            const lista = document.getElementById('lista-historial');
+            let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
+            
+            lista.innerHTML = '';
+            if (historial.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color: var(--text-main);">No hay consultas guardadas.</div>';
+            } else {
+                historial.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'historial-item';
+                    div.onclick = () => cargarRegistroHistorial(item.id);
+                    div.innerHTML = `<h4>${item.titulo}</h4><p>${item.fecha}</p>`;
+                    lista.appendChild(div);
+                });
+            }
+            modal.style.display = 'flex';
+        }
+
+        function cerrarModalHistorial() { document.getElementById('modal-historial').style.display = 'none'; }
+        function borrarHistorial() {
+            if(confirm("¿Estás seguro de borrar todo el historial?")) {
+                localStorage.removeItem('math_historial');
+                abrirModalHistorial();
+            }
+        }
+
+        async function cargarRegistroHistorial(id) {
+            let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
+            let item = historial.find(h => h.id === id);
+            
+            if (item) {
+                currentSessionId = item.id;
+                currentContextoBackend = item.contextoBackend;
+                
+                document.getElementById('math-output').innerHTML = item.mathOutput;
+                document.getElementById('chat-conversation').innerHTML = item.chatOutput;
+                document.getElementById('solution-container').style.display = 'block';
+                
+                cerrarModalHistorial();
+                procesarMatematicas(document.getElementById('math-output'));
+                document.querySelectorAll('.chat-bubble').forEach(b => procesarMatematicas(b));
+
+                // Avisarle al servidor Flask de qué estábamos hablando para revivir el chat
+                try {
+                    await fetch('/restaurar_historial', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ contexto: item.contextoBackend })
+                    });
+                } catch(e) { console.error("Error al sincronizar contexto."); }
+            }
+        }
+        // -------------------------------------------
 
         async function enviarConsulta() {
             const categoria = document.getElementById('categoria').value;
             const modo = document.getElementById('modo-resolucion').value;
             const imageInput = document.getElementById('imageInput');
             const codeInput = document.getElementById('codeInput').value.trim();
-            
             const isImageTab = document.getElementById('panel-image').classList.contains('active');
 
-            if (isImageTab && (!imageInput.files || !imageInput.files[0])) {
-                alert("Por favor selecciona una imagen primero.");
-                return;
-            }
-            if (!isImageTab && !codeInput) {
-                alert("Por favor escribe o pega contenido.");
-                return;
-            }
+            if (isImageTab && (!imageInput.files || !imageInput.files[0])) { alert("Selecciona una imagen."); return; }
+            if (!isImageTab && !codeInput) { alert("Escribe o pega contenido."); return; }
 
             document.getElementById('loading').style.display = 'block';
             document.getElementById('solution-container').style.display = 'none';
@@ -273,29 +321,24 @@
             const formData = new FormData();
             formData.append('categoria', categoria);
             formData.append('modo', modo);
-            
-            if (isImageTab && imageInput.files[0]) {
-                formData.append('imagen', imageInput.files[0]);
-            } else {
-                formData.append('codigo_texto', codeInput);
-            }
+            if (isImageTab && imageInput.files[0]) formData.append('imagen', imageInput.files[0]);
+            else formData.append('codigo_texto', codeInput);
 
             try {
-                const response = await fetch('/resolver', {
-                    method: 'POST',
-                    body: formData
-                });
+                const response = await fetch('/resolver', { method: 'POST', body: formData });
                 const data = await response.json();
 
                 if (data.error) {
                     alert("Error: " + data.error);
                 } else {
-                    const outputDiv = document.getElementById('math-output');
-                    outputDiv.innerHTML = data.solucion_html;
+                    document.getElementById('math-output').innerHTML = data.solucion_html;
                     document.getElementById('solution-container').style.display = 'block';
-                    
-                    // Disparamos la conversión de matemáticas
-                    procesarMatematicas(outputDiv);
+                    procesarMatematicas(document.getElementById('math-output'));
+
+                    // Iniciar nueva sesión de historial
+                    currentSessionId = Date.now();
+                    currentContextoBackend = data.contexto_backend;
+                    guardarEnHistorial();
                 }
             } catch (error) {
                 alert("Error de conexión con el servidor.");
@@ -311,12 +354,10 @@
             if (!mensaje) return;
 
             const chatContainer = document.getElementById('chat-conversation');
-            
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble';
             userBubble.innerHTML = `<strong>Tú:</strong> ${mensaje}`;
             chatContainer.appendChild(userBubble);
-            
             chatInput.value = '';
 
             const loadingBubble = document.createElement('div');
@@ -333,7 +374,6 @@
                     body: JSON.stringify({ mensaje: mensaje })
                 });
                 const data = await response.json();
-
                 document.getElementById('temp-loading').remove();
 
                 if (data.error) {
@@ -343,11 +383,12 @@
                     aiBubble.className = 'chat-bubble';
                     aiBubble.innerHTML = `<strong>IA:</strong><br>${data.respuesta_html}`;
                     chatContainer.appendChild(aiBubble);
-
-                    // Disparamos la conversión de matemáticas también en el chat
                     procesarMatematicas(aiBubble);
-                    
                     chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                    // Actualizar la sesión actual con la nueva información
+                    currentContextoBackend = data.contexto_backend;
+                    guardarEnHistorial();
                 }
             } catch (error) {
                 document.getElementById('temp-loading').remove();

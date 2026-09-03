@@ -7,13 +7,13 @@ import os
 
 app = Flask(__name__)
 CORS(app) 
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "clave-secreta-temporal-123") # Necesario para recordar la sesión del chat
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "super-secret-key-math-solver")
 
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
 @app.route('/')
 def home():
-    session.clear() # Limpiar chat al cargar de nuevo
+    session.clear()
     return render_template('index.html')
 
 @app.route('/resolver', methods=['POST'])
@@ -58,23 +58,24 @@ def resolver_problema():
         if texto_usuario:
             contents.append(f"Problema o código inicial:\n{texto_usuario}")
 
-        # Usamos chat de Gemini para mantener el hilo de la conversación
-        chat = client.chats.create(model="gemini-3.6-flash")
-        response = chat.send_message(contents)
+        response = client.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=contents
+        )
         
-        # Guardamos el historial del chat en la sesión de Flask serializado lógicamente
-        # (Guardamos los mensajes recientes o mantenemos la instancia activa si prefieres)
-        session['historial_prompt'] = response.text
-
         raw_html = response.text.strip()
         if raw_html.startswith("```html"): raw_html = raw_html.replace("```html", "", 1)
         if raw_html.startswith("```"): raw_html = raw_html.replace("```", "", 1)
         if raw_html.endswith("```"): raw_html = raw_html[::-1].replace("```", "", 1)[::-1]
             
-        return jsonify({"solucion_html": raw_html.strip()})
+        session['historial'] = f"Problema inicial:\n{texto_usuario if texto_usuario else 'Imagen adjunta'}\nRespuesta inicial:\n{raw_html}"
+
+        return jsonify({
+            "solucion_html": raw_html.strip(),
+            "contexto_backend": session['historial'] # Enviamos el contexto al frontend para guardarlo
+        })
         
     except Exception as e:
-        print(f"Error interno: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/chat', methods=['POST'])
@@ -86,29 +87,43 @@ def continuar_chat():
         return jsonify({"error": "El mensaje está vacío."}), 400
 
     try:
-        # Creamos un nuevo chat contextual o enviamos el mensaje de seguimiento
-        chat = client.chats.create(model="gemini-3.6-flash")
-        
+        historial_previo = session.get('historial', '')
+
         prompt_seguimiento = f"""
-        Contexto previo de la solución generada: {session.get('historial_prompt', '')}
-        
-        El usuario realiza la siguiente consulta o ajuste sobre la respuesta anterior:
+        Contexto previo de la conversación:
+        {historial_previo}
+
+        Nueva duda o ajuste solicitado por el usuario:
         {mensaje_usuario}
-        
+
         Responde a esta nueva duda manteniendo el formato HTML limpio, usando MathJax para matemáticas ($...$) o etiquetas <pre><code> para código según corresponda. No uses bloques ```html.
         """
 
-        response = chat.send_message(prompt_seguimiento)
-        session['historial_prompt'] = response.text
+        response = client.models.generate_content(
+            model='gemini-3.6-flash',
+            contents=prompt_seguimiento
+        )
 
         raw_html = response.text.strip()
         if raw_html.startswith("```html"): raw_html = raw_html.replace("```html", "", 1)
         if raw_html.startswith("```"): raw_html = raw_html.replace("```", "", 1)
         if raw_html.endswith("```"): raw_html = raw_html[::-1].replace("```", "", 1)[::-1]
 
-        return jsonify({"respuesta_html": raw_html.strip()})
+        session['historial'] = f"{historial_previo}\nPregunta: {mensaje_usuario}\nRespuesta: {raw_html}"
+
+        return jsonify({
+            "respuesta_html": raw_html.strip(),
+            "contexto_backend": session['historial'] # Actualizamos el contexto
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# NUEVA RUTA: Permite al navegador decirle al servidor de qué problema viejo estamos hablando
+@app.route('/restaurar_historial', methods=['POST'])
+def restaurar_historial():
+    data = request.get_json()
+    session['historial'] = data.get('contexto', '')
+    return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
