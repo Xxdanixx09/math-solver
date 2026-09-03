@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solucionador IA: Matemáticas y Código Interactivo</title>
     
-    <script src="[https://polyfill.io/v3/polyfill.min.js?features=es6](https://polyfill.io/v3/polyfill.min.js?features=es6)"></script>
+    <!-- Nueva configuración más robusta para MathJax -->
     <script>
-      MathJax = {
-        tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
-        startup: { typeset: false }
+      window.MathJax = {
+        tex: { 
+            inlineMath: [['$', '$'], ['\\(', '\\)']], 
+            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            processEscapes: true
+        },
+        startup: {
+            typeset: false // Evita que se ejecute antes de tiempo
+        }
       };
     </script>
-    <script id="MathJax-script" async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         :root {
@@ -114,22 +120,15 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
             margin-bottom: 30px;
         }
-        #math-output { overflow-x: auto; font-size: 1rem; }
-        #math-output pre { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
+        
+        /* Ajuste de fuentes para que las matemáticas se vean mejor */
+        #math-output, .chat-bubble { overflow-x: auto; font-size: 1.05rem; }
+        #math-output pre, .chat-bubble pre { background: var(--bg-color); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
 
-        /* Estilos para la sección de seguimiento interactivo */
-        .chat-followup {
-            margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px;
-        }
-        .chat-history {
-            display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px;
-        }
-        .chat-bubble {
-            padding: 15px; border-radius: 8px; background-color: var(--bg-color); border: 1px solid var(--border-color);
-        }
-        .chat-input-wrapper {
-            display: flex; gap: 10px;
-        }
+        .chat-followup { margin-top: 25px; border-top: 2px dashed var(--border-color); padding-top: 20px; }
+        .chat-history { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; }
+        .chat-bubble { padding: 15px; border-radius: 8px; background-color: var(--bg-color); border: 1px solid var(--border-color); }
+        .chat-input-wrapper { display: flex; gap: 10px; }
     </style>
 </head>
 <body>
@@ -180,17 +179,15 @@
 
     <div id="loading">La IA está procesando tu solicitud... ⚙️</div>
 
-    <!-- Contenedor del Resultado e Interacción -->
     <div id="solution-container">
         <h2 style="color: var(--primary-color); margin-top: 0;">Resultado Generado</h2>
         <div id="math-output"></div>
 
-        <!-- Caja de chat para interactuar y añadir cambios -->
         <div class="chat-followup">
             <h3 style="color: var(--primary-color); font-size: 1.1rem; margin-bottom: 10px;">💬 ¿Necesitas añadir algo o hacer una pregunta sobre este resultado?</h3>
             <div id="chat-conversation" class="chat-history"></div>
             <div class="chat-input-wrapper">
-                <input type="text" id="chatInput" placeholder="Ej: Explícame el paso 2 de otra forma, o cambia esta variable a 'y'...">
+                <input type="text" id="chatInput" placeholder="Ej: Explícame el paso 2 de otra forma...">
                 <button class="btn-primary" style="margin-top: 0; width: 150px;" onclick="enviarPreguntaChat()">Enviar</button>
             </div>
         </div>
@@ -242,6 +239,15 @@
             }
         }
 
+        // NUEVA FUNCIÓN: Obliga a MathJax a procesar el texto inyectado
+        function procesarMatematicas(elemento) {
+            if (window.MathJax) {
+                MathJax.typesetPromise([elemento]).catch(function (err) {
+                    console.error('Error procesando matemáticas:', err.message);
+                });
+            }
+        }
+
         async function enviarConsulta() {
             const categoria = document.getElementById('categoria').value;
             const modo = document.getElementById('modo-resolucion').value;
@@ -262,7 +268,7 @@
             document.getElementById('loading').style.display = 'block';
             document.getElementById('solution-container').style.display = 'none';
             document.getElementById('solve-btn').disabled = true;
-            document.getElementById('chat-conversation').innerHTML = ''; // Limpiar chat previo
+            document.getElementById('chat-conversation').innerHTML = ''; 
 
             const formData = new FormData();
             formData.append('categoria', categoria);
@@ -288,8 +294,8 @@
                     outputDiv.innerHTML = data.solucion_html;
                     document.getElementById('solution-container').style.display = 'block';
                     
-                    MathJax.typesetClear([outputDiv]);
-                    MathJax.typesetPromise([outputDiv]).catch(err => console.error(err.message));
+                    // Disparamos la conversión de matemáticas
+                    procesarMatematicas(outputDiv);
                 }
             } catch (error) {
                 alert("Error de conexión con el servidor.");
@@ -306,7 +312,6 @@
 
             const chatContainer = document.getElementById('chat-conversation');
             
-            // Mostrar pregunta del usuario
             const userBubble = document.createElement('div');
             userBubble.className = 'chat-bubble';
             userBubble.innerHTML = `<strong>Tú:</strong> ${mensaje}`;
@@ -314,7 +319,6 @@
             
             chatInput.value = '';
 
-            // Mostrar estado de carga temporal
             const loadingBubble = document.createElement('div');
             loadingBubble.className = 'chat-bubble';
             loadingBubble.id = 'temp-loading';
@@ -340,9 +344,9 @@
                     aiBubble.innerHTML = `<strong>IA:</strong><br>${data.respuesta_html}`;
                     chatContainer.appendChild(aiBubble);
 
-                    // Renderizar MathJax para las nuevas respuestas del chat
-                    MathJax.typesetClear([aiBubble]);
-                    MathJax.typesetPromise([aiBubble]).catch(err => console.error(err.message));
+                    // Disparamos la conversión de matemáticas también en el chat
+                    procesarMatematicas(aiBubble);
+                    
                     chatContainer.scrollTop = chatContainer.scrollHeight;
                 }
             } catch (error) {
