@@ -11,7 +11,7 @@
         startup: { typeset: false }
       };
     </script>
-    <script async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         :root {
@@ -165,7 +165,7 @@
     </div>
 
     <script>
-        // Variables globales para rastrear la sesión actual
+        // Variables globales
         let currentSessionId = null;
         let currentContextoBackend = "";
 
@@ -216,35 +216,43 @@
             }
         }
 
-        // --- SISTEMA DE HISTORIAL (LocalStorage) ---
+        // --- SISTEMA DE HISTORIAL BLINDADO ---
         function guardarEnHistorial() {
-            let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
-            let index = historial.findIndex(h => h.id === currentSessionId);
-            
-            const isImage = document.getElementById('panel-image').classList.contains('active');
-            const categoria = document.getElementById('categoria').value;
-            const icono = categoria === 'matematicas' ? '📐' : '💻';
-            
-            let tituloRaw = isImage ? "Resolución de Imagen" : document.getElementById('codeInput').value;
-            let titulo = `${icono} ` + (tituloRaw.length > 35 ? tituloRaw.substring(0, 35) + "..." : tituloRaw);
+            try {
+                let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
+                let index = historial.findIndex(h => h.id === currentSessionId);
+                
+                const isImage = document.getElementById('panel-image').classList.contains('active');
+                const categoria = document.getElementById('categoria').value;
+                const icono = categoria === 'matematicas' ? '📐' : '💻';
+                
+                let textoInput = document.getElementById('codeInput').value.trim();
+                let primeraLinea = textoInput.split('\n')[0] || "Consulta de texto"; 
+                
+                let tituloRaw = isImage ? "Resolución de Imagen" : primeraLinea;
+                let titulo = `${icono} ` + (tituloRaw.length > 35 ? tituloRaw.substring(0, 35) + "..." : tituloRaw);
 
-            const registro = {
-                id: currentSessionId,
-                fecha: new Date().toLocaleString(),
-                titulo: titulo,
-                mathOutput: document.getElementById('math-output').innerHTML,
-                chatOutput: document.getElementById('chat-conversation').innerHTML,
-                contextoBackend: currentContextoBackend
-            };
+                const registro = {
+                    id: currentSessionId,
+                    fecha: new Date().toLocaleString(),
+                    titulo: titulo,
+                    mathOutput: document.getElementById('math-output').innerHTML,
+                    chatOutput: document.getElementById('chat-conversation').innerHTML,
+                    contextoBackend: currentContextoBackend || ""
+                };
 
-            if (index !== -1) {
-                historial[index] = registro; // Actualiza el chat de esta sesión
-            } else {
-                historial.unshift(registro); // Nuevo problema arriba
+                if (index !== -1) {
+                    historial[index] = registro; 
+                } else {
+                    historial.unshift(registro); 
+                }
+
+                if (historial.length > 15) historial.pop(); 
+                localStorage.setItem('math_historial', JSON.stringify(historial));
+                console.log("Se guardó en historial exitosamente:", titulo);
+            } catch (error) {
+                console.error("Error al guardar historial:", error);
             }
-
-            if (historial.length > 15) historial.pop(); // Guarda máximo los últimos 15
-            localStorage.setItem('math_historial', JSON.stringify(historial));
         }
 
         function abrirModalHistorial() {
@@ -254,7 +262,7 @@
             
             lista.innerHTML = '';
             if (historial.length === 0) {
-                lista.innerHTML = '<div style="text-align:center; color: var(--text-main);">No hay consultas guardadas.</div>';
+                lista.innerHTML = '<div style="text-align:center; color: var(--text-main); padding: 20px;">No hay consultas guardadas. ¡Intenta resolver un problema primero!</div>';
             } else {
                 historial.forEach(item => {
                     const div = document.createElement('div');
@@ -268,6 +276,7 @@
         }
 
         function cerrarModalHistorial() { document.getElementById('modal-historial').style.display = 'none'; }
+        
         function borrarHistorial() {
             if(confirm("¿Estás seguro de borrar todo el historial?")) {
                 localStorage.removeItem('math_historial');
@@ -291,7 +300,6 @@
                 procesarMatematicas(document.getElementById('math-output'));
                 document.querySelectorAll('.chat-bubble').forEach(b => procesarMatematicas(b));
 
-                // Avisarle al servidor Flask de qué estábamos hablando para revivir el chat
                 try {
                     await fetch('/restaurar_historial', {
                         method: 'POST',
@@ -337,7 +345,7 @@
 
                     // Iniciar nueva sesión de historial
                     currentSessionId = Date.now();
-                    currentContextoBackend = data.contexto_backend;
+                    currentContextoBackend = data.contexto_backend || "";
                     guardarEnHistorial();
                 }
             } catch (error) {
@@ -387,7 +395,7 @@
                     chatContainer.scrollTop = chatContainer.scrollHeight;
 
                     // Actualizar la sesión actual con la nueva información
-                    currentContextoBackend = data.contexto_backend;
+                    currentContextoBackend = data.contexto_backend || "";
                     guardarEnHistorial();
                 }
             } catch (error) {
