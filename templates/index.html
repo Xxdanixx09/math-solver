@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solucionador Matemático con IA</title>
+    
+    <!-- Librería MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        startup: { typeset: false }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0f172a;
+            --accent-color: #8b5cf6;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #334155;
+            --border-color: #cbd5e1;
+            --success-color: #10b981;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #f8fafc;
+            --accent-color: #a78bfa;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #cbd5e1;
+            --border-color: #475569;
+            --success-color: #34d399;
+        }
+
+        * { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .header-container {
+            display: flex; flex-direction: column; align-items: center;
+            margin-bottom: 30px; border-bottom: 3px solid var(--accent-color); padding-bottom: 20px;
+        }
+
+        h1 { color: var(--primary-color); text-align: center; margin: 0 0 15px 0;}
+
+        #theme-toggle {
+            background-color: var(--card-bg); color: var(--primary-color);
+            border: 2px solid var(--accent-color); padding: 8px 16px;
+            border-radius: 20px; cursor: pointer; font-weight: 600;
+        }
+
+        .upload-section {
+            background-color: var(--card-bg); padding: 30px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 30px;
+            text-align: center; border: 1px solid var(--border-color);
+        }
+
+        /* Estilo para el selector de modo */
+        .mode-selector {
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-selector select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 80%;
+            outline: none;
+        }
+
+        .mode-selector select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .file-upload-wrapper { position: relative; margin-bottom: 20px; }
+        .file-upload-input { width: 0.1px; height: 0.1px; opacity: 0; position: absolute; z-index: -1; }
+        
+        .file-upload-label {
+            display: inline-block; padding: 20px 40px; background-color: transparent;
+            color: var(--primary-color); border: 2px dashed var(--accent-color);
+            border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; width: 80%;
+        }
+        .file-upload-label:hover { background-color: rgba(139, 92, 246, 0.1); }
+
+        #image-preview {
+            max-width: 100%; max-height: 300px; margin-top: 20px;
+            border-radius: 8px; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        #solve-btn {
+            background-color: var(--accent-color); color: white; border: none;
+            padding: 12px 24px; border-radius: 8px; font-size: 1.1rem; font-weight: bold;
+            cursor: pointer; width: 100%; margin-top: 20px;
+        }
+        #solve-btn:disabled { background-color: var(--border-color); cursor: not-allowed; color: #64748b; }
+
+        #loading { text-align: center; display: none; font-weight: bold; color: var(--accent-color); margin: 20px 0; font-size: 1.2rem; }
+
+        #solution-container {
+            display: none; background-color: var(--card-bg); padding: 30px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid var(--success-color);
+            border: 1px solid var(--border-color); border-left: 5px solid var(--success-color);
+        }
+        #math-output { overflow-x: auto; font-size: 1.1rem;}
+    </style>
+</head>
+<body>
+
+    <div class="header-container">
+        <h1>Solucionador Matemático con IA</h1>
+        <button id="theme-toggle">🌙 Modo Oscuro</button>
+    </div>
+
+    <div class="upload-section">
+        
+        <!-- Nuevo Menú de Opciones -->
+        <div class="mode-selector">
+            <label for="modo-resolucion" style="font-weight: bold; color: var(--primary-color);">¿Cómo quieres la respuesta?</label>
+            <select id="modo-resolucion">
+                <option value="detallado">📚 Explicación detallada paso a paso</option>
+                <option value="procedimiento_directo">⚙️ Solo procedimiento matemático y respuesta (Sin texto)</option>
+                <option value="solo_respuesta">🎯 Solo la respuesta final</option>
+            </select>
+        </div>
+
+        <p>Sube una foto o captura de pantalla de tu ejercicio matemático.</p>
+        
+        <div class="file-upload-wrapper">
+            <input type="file" id="imageInput" class="file-upload-input" accept="image/*" onchange="previewImage(event)">
+            <label for="imageInput" class="file-upload-label">📸 Haz clic para subir una imagen</label>
+        </div>
+
+        <img id="image-preview" alt="Previsualización del problema">
+
+        <button id="solve-btn" onclick="resolverImagen()" disabled>Analizar y Resolver Imagen</button>
+    </div>
+
+    <div id="loading">La IA está analizando la imagen y calculando la solución... ⚙️</div>
+
+    <div id="solution-container">
+        <h2 style="color: var(--primary-color); margin-top: 0;">Solución Generada</h2>
+        <div id="math-output"></div>
+    </div>
+
+    <script>
+        // Lógica de Tema Oscuro
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const rootElement = document.documentElement;
+        if (localStorage.getItem('theme') === 'dark') {
+            rootElement.setAttribute('data-theme', 'dark');
+            themeToggleBtn.textContent = '☀️ Modo Claro';
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (rootElement.getAttribute('data-theme') === 'dark') {
+                rootElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggleBtn.textContent = '🌙 Modo Oscuro';
+            } else {
+                rootElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggleBtn.textContent = '☀️ Modo Claro';
+            }
+        });
+
+        // Previsualizar Imagen
+        function previewImage(event) {
+            const input = event.target;
+            const preview = document.getElementById('image-preview');
+            const solveBtn = document.getElementById('solve-btn');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'inline-block';
+                    solveBtn.disabled = false;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Enviar al servidor
+        async function resolverImagen() {
+            const input = document.getElementById('imageInput');
+            const modo = document.getElementById('modo-resolucion').value; // Capturamos la opción elegida
+            
+            if (!input.files[0]) return;
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('solution-container').style.display = 'none';
+            document.getElementById('solve-btn').disabled = true;
+
+            const formData = new FormData();
+            formData.append('imagen', input.files[0]);
+            formData.append('modo', modo); // Agregamos la opción al envío
+
+            try {
+                const response = await fetch('/resolver', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    const outputDiv = document.getElementById('math-output');
+                    outputDiv.innerHTML = data.solucion_html;
+                    document.getElementById('solution-container').style.display = 'block';
+                    
+                    MathJax.typesetClear([outputDiv]);
+                    MathJax.typesetPromise([outputDiv]).catch(err => console.error(err.message));
+                }
+            } catch (error) {
+                alert("Error de conexión. ¿El servidor Python está corriendo?");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('solve-btn').disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
