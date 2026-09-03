@@ -16,41 +16,52 @@ def home():
 
 @app.route('/resolver', methods=['POST'])
 def resolver_problema():
+    categoria = request.form.get('categoria', 'matematicas') # matematicas o codigo
     modo = request.form.get('modo', 'detallado')
     
-    # Recogemos los datos (puede venir una imagen o un texto escrito)
     file = request.files.get('imagen')
     texto_usuario = request.form.get('codigo_texto', '').strip()
 
     if not file and not texto_usuario:
-        return jsonify({"error": "No se subió ninguna imagen ni se escribió código."}), 400
+        return jsonify({"error": "No se proporcionó ninguna imagen ni texto."}), 400
 
     try:
+        # Definir instrucciones según el modo de detalle
         instruccion_modo = ""
         if modo == 'solo_respuesta':
-            instruccion_modo = "Devuelve ÚNICAMENTE la respuesta final o la solución directa."
+            instruccion_modo = "Devuelve ÚNICAMENTE la respuesta final o el resultado directo de forma concisa."
         elif modo == 'procedimiento_directo':
-            instruccion_modo = "Devuelve ÚNICAMENTE el procedimiento paso a paso o código corregido, sin explicaciones extensas."
+            instruccion_modo = "Devuelve ÚNICAMENTE los pasos lógicos o las ecuaciones/código de forma directa, sin texto de relleno."
         else:
-            instruccion_modo = "Resuelve el problema o explica el código paso a paso de forma detallada."
+            instruccion_modo = "Explica todo el proceso de forma detallada y pedagógica."
 
-        prompt = f"""
-        Eres un profesor experto en matemáticas y un desarrollador de software senior.
-        Tu tarea es:
-        1. {instruccion_modo}
-        2. Si la respuesta incluye código, utiliza etiquetas HTML estándar <pre><code>...</code></pre> para mostrarlo limpio.
-        3. Retornar TODO el resultado en formato HTML.
-        4. Usa MathJax para TODAS las fórmulas matemáticas (usa $ para fórmulas en línea y $$ para bloques).
-        5. Devuelve SOLO el texto HTML limpio sin usar bloques de código Markdown externos como ```html.
-        """
+        # SEPARACIÓN DE LÓGICA: Prompt especializado para Matemáticas vs Código
+        if categoria == 'matematicas':
+            prompt = f"""
+            Eres un profesor experto en matemáticas. El usuario te envía un problema matemático (en imagen o texto).
+            Tu tarea es:
+            1. {instruccion_modo}
+            2. REGLA ESTRICTA DE FORMATO MATEMÁTICO: Usa fórmulas en línea ($...$) para variables sueltas o partes de oraciones, y bloques independientes ($$...$$) SOLO en líneas separadas fuera de viñetas o listas. NUNCA pongas bloques $$ dentro de viñetas <li>.
+            3. Retornar TODO el resultado limpio en formato HTML.
+            4. Devuelve SOLO el texto HTML limpio sin usar bloques de código Markdown externos como ```html.
+            """
+        else:
+            prompt = f"""
+            Eres un desarrollador de software senior y experto en programación. El usuario te envía un fragmento o imagen de código.
+            Tu tarea es:
+            1. {instruccion_modo}
+            2. Analiza, corrige o explica el código fuente (Java, Python, CSS, etc.).
+            3. Utiliza obligatoriamente etiquetas HTML <pre><code>...</code></pre> estilizadas para mostrar los bloques de código limpios.
+            4. Retornar TODO el resultado en formato HTML.
+            5. Devuelve SOLO el texto HTML limpio sin usar bloques de código Markdown externos como ```html.
+            """
 
-        # Preparamos el contenido dependiendo de si envió imagen o texto
         contents = [prompt]
         if file:
             image = Image.open(io.BytesIO(file.read()))
             contents.append(image)
         if texto_usuario:
-            contents.append(f"Fragmento de código o problema escrito por el usuario:\n{texto_usuario}")
+            contents.append(f"Contenido ingresado por el usuario:\n{texto_usuario}")
 
         response = client.models.generate_content(
             model='gemini-3.6-flash',

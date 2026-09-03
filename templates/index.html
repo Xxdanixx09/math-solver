@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solucionador de Matemáticas y Código con IA</title>
+    <title>Solucionador IA: Matemáticas y Código</title>
     
-    <script src="[https://polyfill.io/v3/polyfill.min.js?features=es6](https://polyfill.io/v3/polyfill.min.js?features=es6)"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script>
       MathJax = {
         tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
         startup: { typeset: false }
       };
     </script>
-    <script id="MathJax-script" async src="[https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js](https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js)"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <style>
         :root {
@@ -66,18 +66,17 @@
             border: 1px solid var(--border-color);
         }
 
-        .mode-selector {
-            margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;
-        }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        
+        .control-group { display: flex; flex-direction: column; gap: 8px; }
+        .control-group label { font-weight: bold; color: var(--primary-color); font-size: 0.95rem; }
 
-        .mode-selector select, textarea {
+        select, textarea {
             padding: 10px 15px; border-radius: 8px; border: 2px solid var(--border-color);
             background-color: var(--bg-color); color: var(--text-main); font-size: 1rem; width: 100%; outline: none; box-sizing: border-box;
         }
+        select:focus, textarea:focus { border-color: var(--accent-color); }
 
-        .mode-selector select:focus, textarea:focus { border-color: var(--accent-color); }
-
-        /* Pestañas de entrada */
         .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
         .tab-btn {
             flex: 1; padding: 10px; background: var(--bg-color); border: 2px solid var(--border-color);
@@ -88,9 +87,7 @@
         .input-panel { display: none; text-align: center; }
         .input-panel.active { display: block; }
 
-        textarea {
-            resize: vertical; min-height: 120px; font-family: monospace;
-        }
+        textarea { resize: vertical; min-height: 120px; font-family: monospace; text-align: left; }
 
         .file-upload-wrapper { position: relative; margin-bottom: 10px; }
         .file-upload-input { width: 0.1px; height: 0.1px; opacity: 0; position: absolute; z-index: -1; }
@@ -102,9 +99,7 @@
         }
         .file-upload-label:hover { background-color: rgba(139, 92, 246, 0.1); }
 
-        #image-preview {
-            max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px; display: none;
-        }
+        #image-preview { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 8px; display: none; }
 
         #solve-btn {
             background-color: var(--accent-color); color: white; border: none;
@@ -132,33 +127,40 @@
 
     <div class="upload-section">
         
-        <div class="mode-selector">
-            <label style="font-weight: bold; color: var(--primary-color);">Modo de respuesta:</label>
-            <select id="modo-resolucion">
-                <option value="detallado">📚 Explicación detallada paso a paso</option>
-                <option value="procedimiento_directo">⚙️ Solo procedimiento / Código directo</option>
-                <option value="solo_respuesta">🎯 Solo la respuesta final</option>
-            </select>
+        <!-- Controles separados: Categoría y Nivel de detalle -->
+        <div class="controls-grid">
+            <div class="control-group">
+                <label for="categoria">Categoría:</label>
+                <select id="categoria">
+                    <option value="matematicas">📐 Matemáticas / Cálculo</option>
+                    <option value="codigo">💻 Código de Programación</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="modo-resolucion">Tipo de respuesta:</label>
+                <select id="modo-resolucion">
+                    <option value="detallado">📚 Explicación detallada</option>
+                    <option value="procedimiento_directo">⚙️ Solo procedimiento / Directo</option>
+                    <option value="solo_respuesta">🎯 Solo respuesta final</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Pestañas para elegir entrada -->
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('image')">📸 Subir Imagen</button>
             <button class="tab-btn" onclick="switchTab('text')">⌨️ Escribir Código / Texto</button>
         </div>
 
-        <!-- Panel de Imagen -->
         <div id="panel-image" class="input-panel active">
             <div class="file-upload-wrapper">
                 <input type="file" id="imageInput" class="file-upload-input" accept="image/*" onchange="previewImage(event)">
-                <label for="imageInput" class="file-upload-label">Haz clic para subir imagen (Matemáticas o Código)</label>
+                <label for="imageInput" class="file-upload-label">Haz clic para subir imagen</label>
             </div>
             <img id="image-preview" alt="Previsualización">
         </div>
 
-        <!-- Panel de Texto -->
         <div id="panel-text" class="input-panel">
-            <textarea id="codeInput" placeholder="Pega tu fragmento de código (Java, CSS, Python...) o describe tu problema matemático aquí..."></textarea>
+            <textarea id="codeInput" placeholder="Escribe tu código o problema aquí..."></textarea>
         </div>
 
         <button id="solve-btn" onclick="enviarConsulta()">Analizar y Resolver</button>
@@ -218,6 +220,7 @@
         }
 
         async function enviarConsulta() {
+            const categoria = document.getElementById('categoria').value;
             const modo = document.getElementById('modo-resolucion').value;
             const imageInput = document.getElementById('imageInput');
             const codeInput = document.getElementById('codeInput').value.trim();
@@ -229,7 +232,7 @@
                 return;
             }
             if (!isImageTab && !codeInput) {
-                alert("Por favor escribe o pega algún código o problema.");
+                alert("Por favor escribe o pega contenido.");
                 return;
             }
 
@@ -238,6 +241,7 @@
             document.getElementById('solve-btn').disabled = true;
 
             const formData = new FormData();
+            formData.append('categoria', categoria);
             formData.append('modo', modo);
             
             if (isImageTab && imageInput.files[0]) {
