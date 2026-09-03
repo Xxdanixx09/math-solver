@@ -87,6 +87,9 @@
         .historial-item:hover { border-color: var(--accent-color); }
         .historial-item h4 { margin: 0 0 5px 0; color: var(--primary-color); font-size: 1.05rem; }
         .historial-item p { margin: 0; font-size: 0.85rem; color: #64748b; }
+        
+        /* Contenedor del título y botón de descarga */
+        .resultado-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -141,7 +144,12 @@
     <div id="loading">La IA está procesando tu solicitud... ⚙️</div>
 
     <div id="solution-container">
-        <h2 style="color: var(--primary-color); margin-top: 0;">Resultado Generado</h2>
+        <!-- Nuevo encabezado con botón de descarga -->
+        <div class="resultado-header">
+            <h2 style="color: var(--primary-color); margin: 0;">Resultado Generado</h2>
+            <button class="btn-outline" style="padding: 6px 12px; font-size: 0.9rem;" onclick="descargarResultado()">📥 Descargar</button>
+        </div>
+        
         <div id="math-output"></div>
 
         <div class="chat-followup">
@@ -216,7 +224,7 @@
             }
         }
 
-        // --- SISTEMA DE HISTORIAL BLINDADO ---
+        // --- SISTEMA DE HISTORIAL ---
         function guardarEnHistorial() {
             try {
                 let historial = JSON.parse(localStorage.getItem('math_historial')) || [];
@@ -238,21 +246,16 @@
                     titulo: titulo,
                     mathOutput: document.getElementById('math-output').innerHTML,
                     chatOutput: document.getElementById('chat-conversation').innerHTML,
-                    contextoBackend: currentContextoBackend || ""
+                    contextoBackend: currentContextoBackend || "",
+                    categoriaGuardada: categoria // Guardamos la categoría para la descarga
                 };
 
-                if (index !== -1) {
-                    historial[index] = registro; 
-                } else {
-                    historial.unshift(registro); 
-                }
+                if (index !== -1) { historial[index] = registro; } 
+                else { historial.unshift(registro); }
 
                 if (historial.length > 15) historial.pop(); 
                 localStorage.setItem('math_historial', JSON.stringify(historial));
-                console.log("Se guardó en historial exitosamente:", titulo);
-            } catch (error) {
-                console.error("Error al guardar historial:", error);
-            }
+            } catch (error) { console.error("Error al guardar historial:", error); }
         }
 
         function abrirModalHistorial() {
@@ -292,6 +295,9 @@
                 currentSessionId = item.id;
                 currentContextoBackend = item.contextoBackend;
                 
+                // Restaurar la categoría visualmente para que funcione bien el botón descargar
+                if(item.categoriaGuardada) document.getElementById('categoria').value = item.categoriaGuardada;
+
                 document.getElementById('math-output').innerHTML = item.mathOutput;
                 document.getElementById('chat-conversation').innerHTML = item.chatOutput;
                 document.getElementById('solution-container').style.display = 'block';
@@ -306,7 +312,75 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contexto: item.contextoBackend })
                     });
-                } catch(e) { console.error("Error al sincronizar contexto."); }
+                } catch(e) {}
+            }
+        }
+        // -------------------------------------------
+
+        // --- SISTEMA DE DESCARGA INTELIGENTE ---
+        function descargarResultado() {
+            const categoria = document.getElementById('categoria').value;
+            const mathOutput = document.getElementById('math-output');
+            const chatOutput = document.getElementById('chat-conversation');
+            
+            // Combinamos el resultado principal y el chat (si hay)
+            const contenidoCompleto = mathOutput.innerHTML + "<hr>" + chatOutput.innerHTML;
+
+            if (categoria === 'matematicas') {
+                // Descargar como HTML con MathJax inyectado para que se vea bien offline
+                const htmlTemplate = `
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Solución Matemática</title>
+                    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"><\/script>
+                    <script>
+                      window.MathJax = {
+                        tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']], processEscapes: true }
+                      };
+                    <\/script>
+                    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+                    <style>
+                        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; line-height: 1.6; padding: 20px; color: #333; }
+                        pre { background: #f4f4f4; padding: 15px; border-radius: 8px; overflow-x: auto; }
+                        .chat-bubble { padding: 15px; border-radius: 8px; background-color: #f8fafc; border: 1px solid #cbd5e1; margin-bottom: 10px; }
+                        hr { border: 0; border-top: 2px dashed #cbd5e1; margin: 30px 0; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Resolución Exportada</h2>
+                    ${contenidoCompleto}
+                </body>
+                </html>`;
+                
+                const blob = new Blob([htmlTemplate], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'solucion_matematicas.html';
+                a.click();
+            } else {
+                // Descargar solo el código fuente extraído de las cajas <pre><code>
+                const outputDiv = document.createElement('div');
+                outputDiv.innerHTML = contenidoCompleto;
+                const bloquesCodigo = outputDiv.querySelectorAll('pre code');
+                let textoDescarga = "";
+
+                if (bloquesCodigo.length > 0) {
+                    bloquesCodigo.forEach((bloque, i) => {
+                        textoDescarga += `// --- Fragmento de código ${i + 1} ---\n`;
+                        textoDescarga += bloque.innerText + "\n\n";
+                    });
+                } else {
+                    // Si no usó etiquetas de código claras, descargamos todo como texto
+                    textoDescarga = outputDiv.innerText;
+                }
+
+                const blob = new Blob([textoDescarga], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'codigo_exportado.txt'; // txt genérico para que el usuario le ponga la extensión que quiera (java, py, etc)
+                a.click();
             }
         }
         // -------------------------------------------
@@ -343,7 +417,6 @@
                     document.getElementById('solution-container').style.display = 'block';
                     procesarMatematicas(document.getElementById('math-output'));
 
-                    // Iniciar nueva sesión de historial
                     currentSessionId = Date.now();
                     currentContextoBackend = data.contexto_backend || "";
                     guardarEnHistorial();
@@ -394,7 +467,6 @@
                     procesarMatematicas(aiBubble);
                     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-                    // Actualizar la sesión actual con la nueva información
                     currentContextoBackend = data.contexto_backend || "";
                     guardarEnHistorial();
                 }
